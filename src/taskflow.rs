@@ -1,5 +1,3 @@
-use std::thread;
-
 #[derive(Debug)]
 pub enum Error {
     NoResult,
@@ -19,9 +17,10 @@ pub trait Condition<T: State<T> + Clone> {
 }
 
 pub trait WithName {
-    fn with_name(&mut self, n: String) -> &Self;
+    fn with_name(&mut self, n: &str) -> Self;
 }
 
+#[derive(Clone)]
 pub struct SequenceTask<'a, T: State<T> + Clone> {
     n: String,
     tasks: Vec<&'a dyn Task<T>>,
@@ -41,12 +40,13 @@ impl<'a, T: State<T> + Clone> Task<T> for SequenceTask<'a, T> {
 }
 
 impl<'a, T: State<T> + Clone> WithName for SequenceTask<'a, T> {
-    fn with_name(&mut self, n: String) -> &Self {
-        self.n = n;
-        self
+    fn with_name(&mut self, n: &str) -> Self {
+        self.n = n.to_string();
+        self.clone()
     }
 }
 
+#[derive(Clone)]
 pub struct OrTask<'a, T: State<T> + Clone> {
     n: String,
     tasks: Vec<&'a dyn Task<T>>,
@@ -68,12 +68,13 @@ impl<'a, T: State<T> + Clone> Task<T> for OrTask<'a, T> {
 }
 
 impl<'a, T: State<T> + Clone> WithName for OrTask<'a, T> {
-    fn with_name(&mut self, n: String) -> &Self {
-        self.n = n;
-        self
+    fn with_name(&mut self, n: &str) -> Self {
+        self.n = n.to_string();
+        self.clone()
     }
 }
 
+#[derive(Clone)]
 pub struct ConcurrentTask<'a, T: State<T> + Clone> {
     n: String,
     tasks: Vec<&'a dyn Task<T>>,
@@ -90,12 +91,13 @@ impl<'a, T: State<T> + Clone> Task<T> for ConcurrentTask<'a, T> {
 }
 
 impl<'a, T: State<T> + Clone> WithName for ConcurrentTask<'a, T> {
-    fn with_name(&mut self, n: String) -> &Self {
-        self.n = n;
-        self
+    fn with_name(&mut self, n: &str) -> Self {
+        self.n = n.to_string();
+        self.clone()
     }
 }
 
+#[derive(Clone)]
 pub struct IfTask<'a, T: State<T> + Clone> {
     n: String,
     condition: &'a dyn Condition<T>,
@@ -118,9 +120,9 @@ impl<'a, T: State<T> + Clone> Task<T> for IfTask<'a, T> {
 }
 
 impl<'a, T: State<T> + Clone> WithName for IfTask<'a, T> {
-    fn with_name(&mut self, n: String) -> &Self {
-        self.n = n;
-        self
+    fn with_name(&mut self, n: &str) -> Self {
+        self.n = n.to_string();
+        self.clone()
     }
 }
 
@@ -197,7 +199,7 @@ mod test {
         let task3 = new_task("task1", &|a: TestState| -> Result<TestState, Error> {
             Ok(TestState { num: a.num + 3 })
         });
-        let seq_task = sequence(vec![&task1, &task2, &task3]);
+        let seq_task = sequence(vec![&task1, &task2, &task3]).with_name("seq_task");
         let res = seq_task.execute(TestState { num: 100 });
         print!("{:?}", res);
     }
@@ -213,7 +215,7 @@ mod test {
         let task3 = new_task("task1", &|a: TestState| -> Result<TestState, Error> {
             Ok(TestState { num: a.num + 3 })
         });
-        let or_task = or(vec![&task1, &task2, &task3]);
+        let or_task = or(vec![&task1, &task2, &task3]).with_name("or_task");
         let res = or_task.execute(TestState { num: 100 });
         print!("{:?}", res);
     }
