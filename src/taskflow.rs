@@ -23,8 +23,8 @@ pub trait WithName {
 }
 
 pub struct SequenceTask<'a, T: State<T>> {
-    n: String,
-    tasks: Vec<&'a dyn Task<T>>,
+    pub n: String,
+    pub tasks: Vec<&'a dyn Task<T>>,
 }
 
 impl<'a, T: State<T>> Task<T> for SequenceTask<'a, T> {
